@@ -2,7 +2,7 @@
 COMPILER_FLAGS = -Og
 
 default :
-	g++ $(COMPILER_FLAGS) peer.cpp main.cpp
+	g++ $(COMPILER_FLAGS) src/peer.cpp main.cpp
 
 clean :
 	rm *.out
