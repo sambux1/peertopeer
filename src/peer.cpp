@@ -1,8 +1,14 @@
 #include "peer.h"
 
-Peer::Peer(std::string id, uint16_t port) {
+Peer::Peer(std::string id, int port) {
     this->id = id;
-    this->portnum = port;
+
+    // check that the port number is valid, set default if not
+    if ((port > 65535) || (port < 1024)) {
+        this->portnum = (uint16_t) DEFAULT_PORT;
+    } else {
+        this->portnum = (uint16_t) port;
+    }
 
     // start the server to accept incoming connections
     std::thread t(&Peer::run_server, this);

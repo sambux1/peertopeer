@@ -32,7 +32,10 @@ release = '0.0'
 # ones.
 extensions = [
     'sphinx_rtd_theme',
+    'myst_parser',
 ]
+
+source_suffix = ['.md']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

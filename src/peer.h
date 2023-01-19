@@ -17,7 +17,7 @@
 #include <iostream>
 #include <vector>
 
-#define PORT "12829"
+#define DEFAULT_PORT 12829
 
 typedef struct contact_info {
     const char* ip;
@@ -29,7 +29,7 @@ class Peer {
 
 public:
     // constructor
-    Peer(std::string id, uint16_t port);
+    Peer(std::string id, int port);
 
     // return the number of active connections
     int get_num_connections();

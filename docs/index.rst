@@ -18,3 +18,8 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Peer
+====
+A ``Peer`` object is a node in the peer to peer network. The interface for using the object is described below.
+
