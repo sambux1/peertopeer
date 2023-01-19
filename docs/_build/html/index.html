@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Peer Class &mdash; peertopeer 0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> peertopeer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">The <code class="docutils literal notranslate"><span class="pre">Peer</span></code> Class</a><ul>
+<li><a class="reference internal" href="#create-peer">Create Peer</a></li>
+<li><a class="reference internal" href="#establish-connections">Establish Connections</a></li>
+<li><a class="reference internal" href="#sending-and-receiving-messages">Sending and Receiving Messages</a><ul>
+<li><a class="reference internal" href="#sending">Sending</a></li>
+<li><a class="reference internal" href="#broadcasting">Broadcasting</a></li>
+<li><a class="reference internal" href="#receiving">Receiving</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">peertopeer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">The <code class="docutils literal notranslate"><span class="pre">Peer</span></code> Class</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-peer-class">
+<h1>The <code class="docutils literal notranslate"><span class="pre">Peer</span></code> Class<a class="headerlink" href="#the-peer-class" title="Permalink to this headline"></a></h1>
+<p>A <code class="docutils literal notranslate"><span class="pre">Peer</span></code> object is a node in the peer to peer network.
+The interface for interacting with the object is described below.</p>
+<section id="create-peer">
+<h2>Create Peer<a class="headerlink" href="#create-peer" title="Permalink to this headline"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Peer(std::string</span> <span class="pre">id,</span> <span class="pre">int</span> <span class="pre">port)</span></code></p>
+<p>Inputs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">std::string</span> <span class="pre">id</span></code> - a unique identifier, particularly useful for local testing with multiple peers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">port</span></code> - the port to run the peer’s server on, legal values are [1024, 65535], default value is 12829 (pass an invalid number for the default)</p></li>
+</ul>
+<p>Example:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Peer</span> <span class="pre">p(&quot;peername&quot;,</span> <span class="pre">12829);</span></code></p>
+</section>
+<section id="establish-connections">
+<h2>Establish Connections<a class="headerlink" href="#establish-connections" title="Permalink to this headline"></a></h2>
+<p>Once a <code class="docutils literal notranslate"><span class="pre">Peer</span></code> object is created, it automatically starts a TCP server to listen for and accept incoming connections from any peers that initiate a connection.</p>
+<p>To initiate a connection, you must supply the target’s IP address and port number in the form of a <code class="docutils literal notranslate"><span class="pre">contact_info</span></code> struct, defined below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">contact_info</span> <span class="p">{</span>
+    <span class="n">const</span> <span class="n">char</span><span class="o">*</span> <span class="n">ip</span><span class="p">;</span>
+    <span class="n">uint16_t</span> <span class="n">port</span><span class="p">;</span>
+    <span class="nb">int</span> <span class="n">sockfd</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span> <span class="pre">ip</span></code> - the target’s IP address as a C string, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;127.0.0.1&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;::1&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">port</span></code> - the target’s port number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">sockfd</span></code> - I’ll do something about this, it shouldn’t be editable</p></li>
+</ul>
+<br />
+<p>Connections can be created one-by-one or in a batch.</p>
+<p>To create a single connection:</p>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">create_connection(contact_info</span> <span class="pre">info)</span></code></p>
+<p>Returns:</p>
+<ul class="simple">
+<li><p>1 if connection succeeds</p></li>
+<li><p>0 if connection fails</p></li>
+</ul>
+<br />
+<p>To create multiple connections in a batch, you supply a vector of contact info structs:</p>
+<p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">create_batch_connections(std::vector&lt;contact_info&gt;</span> <span class="pre">info_list)</span></code></p>
+<p>Returns:</p>
+<ul class="simple">
+<li><p>the number of successful connections from the batch</p></li>
+</ul>
+</section>
+<section id="sending-and-receiving-messages">
+<h2>Sending and Receiving Messages<a class="headerlink" href="#sending-and-receiving-messages" title="Permalink to this headline"></a></h2>
+<section id="sending">
+<h3>Sending<a class="headerlink" href="#sending" title="Permalink to this headline"></a></h3>
+<p>To send a message, use the <code class="docutils literal notranslate"><span class="pre">send</span></code> method, which takes as input the contact info of the peer and the message to be sent. This method has the same interface for both TCP and UDP messages.</p>
+<p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">send(contact_info</span> <span class="pre">peer,</span> <span class="pre">std::string</span> <span class="pre">message);</span></code></p>
+</section>
+<section id="broadcasting">
+<h3>Broadcasting<a class="headerlink" href="#broadcasting" title="Permalink to this headline"></a></h3>
+<p>In addition to sending a message directly to one peer, it is also possible to broadcast a message to all connected peers (TCP) and all known peers (UDP).</p>
+<p>To broadcast to all TCP connections, simply pass the message as input.</p>
+<p><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">broadcast(std::string</span> <span class="pre">message);</span></code></p>
+<p>Broadcasting to all known UDP connections is handled by the distributed hash table.</p>
+</section>
+<section id="receiving">
+<h3>Receiving<a class="headerlink" href="#receiving" title="Permalink to this headline"></a></h3>
+<p>Receiving messages is handled automatically. Incoming messages are added to a queue which can be read from.</p>
+<p>The peer maintains a listening thread for each TCP connection and a single listening thread for all UDP connections.</p>
+<p>To read the next message from the message queue:</p>
+<p><code class="docutils literal notranslate"><span class="pre">message</span> <span class="pre">get_message();</span></code></p>
+<p>The return value is a message struct, which contains both the string sent and additional information about the sender.</p>
+<p><em>Insert struct info here</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sam Buxbaum.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
