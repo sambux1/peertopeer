@@ -25,6 +25,11 @@ typedef struct contact_info {
     int sockfd;
 } contact_info;
 
+typedef struct message {
+    //contact_info sender_info;
+    std::string body;
+} message;
+
 class Peer {
 
 public:
@@ -34,9 +39,15 @@ public:
     // return the number of active connections
     int get_num_connections();
 
-    int create_connection(contact_info info);
+    // return the number of available messages
+    int get_num_messages();
 
-    void send(contact_info peer, std::string message);
+    // get the next message off the queue
+    message get_message();
+
+    int create_connection(contact_info* info);
+
+    void send_message(contact_info peer, std::string message);
     void broadcast(std::string message);
 
 private:
@@ -48,7 +59,7 @@ private:
     std::mutex connections_lock;
 
     // message queue which all receive threads add to
-    std::deque<std::string> message_queue;
+    std::deque<message> message_queue;
     std::mutex message_queue_lock;
 
     // TCP server, listens for connections and makes receive threads

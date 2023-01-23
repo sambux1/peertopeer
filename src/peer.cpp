@@ -23,8 +23,30 @@ int Peer::get_num_connections() {
     return num;
 }
 
-int Peer::create_connection(contact_info info) {
-    const char* port = std::to_string(info.port).c_str();
+int Peer::get_num_messages() {
+    this->message_queue_lock.lock();
+    int num = this->message_queue.size();
+    this->message_queue_lock.unlock();
+
+    return num;
+}
+
+message Peer::get_message() {
+    this->message_queue_lock.lock();
+    message m = this->message_queue.front();
+    this->message_queue.pop_front();
+    this->message_queue_lock.unlock();
+
+    return m;
+}
+
+void Peer::send_message(contact_info info, std::string message) {
+    if (send(info.sockfd, message.c_str(), message.size(), 0) == -1)
+        perror("send");
+}
+
+int Peer::create_connection(contact_info* info) {
+    const char* port = std::to_string(info->port).c_str();
 
     int sockfd;
     struct addrinfo* server_info;
@@ -40,7 +62,7 @@ int Peer::create_connection(contact_info info) {
 
     // get information about the server to connect to
     int ret;
-    if ((ret = getaddrinfo(info.ip, port, &hints, &server_info)) != 0) {
+    if ((ret = getaddrinfo(info->ip, port, &hints, &server_info)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
         return 1;
     }
@@ -71,10 +93,10 @@ int Peer::create_connection(contact_info info) {
     // if it gets here, the connection is established
 
     // update the sockfd field
-    info.sockfd = sockfd;
+    info->sockfd = sockfd;
     // add the new connection to the connection list
     this->connections_lock.lock();
-    this->connections.push_back(info);
+    this->connections.push_back(*info);
     this->connections_lock.unlock();
 
     // create a listener thread
@@ -186,8 +208,10 @@ void Peer::receive_loop(int sockfd) {
         buf[numbytes] = '\0';
         std::string s(buf);
         
+        message m = {s};
+
         this->message_queue_lock.lock();
-        this->message_queue.push_back(s);
+        this->message_queue.push_back(m);
         this->message_queue_lock.unlock();
     }
 
