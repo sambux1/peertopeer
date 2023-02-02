@@ -16,6 +16,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <map>
 
 #define DEFAULT_PORT 12829
 
@@ -26,7 +27,7 @@ typedef struct contact_info {
 } contact_info;
 
 typedef struct message {
-    //contact_info sender_info;
+    std::string sender_name;
     std::string body;
 } message;
 
@@ -45,9 +46,9 @@ public:
     // get the next message off the queue
     message get_message();
 
-    int create_connection(contact_info* info);
+    bool create_connection(std::string peer_id, contact_info info);
 
-    void send_message(contact_info peer, std::string message);
+    void send_message(std::string peer_id, std::string message);
     void broadcast(std::string message);
 
 private:
@@ -55,7 +56,7 @@ private:
     int portnum;
 
     // connection list
-    std::vector<contact_info> connections;
+    std::map<std::string, contact_info> connections;
     std::mutex connections_lock;
 
     // message queue which all receive threads add to
@@ -66,7 +67,7 @@ private:
     void run_server();
 
     // an infinite receive loop to run as a separate thread
-    void receive_loop(int sockfd);
+    void receive_loop(int sockfd, std::string peer_id);
 
 };
 

@@ -40,13 +40,18 @@ message Peer::get_message() {
     return m;
 }
 
-void Peer::send_message(contact_info info, std::string message) {
+void Peer::send_message(std::string peer_id, std::string message) {
+    contact_info info = this->connections[peer_id];
     if (send(info.sockfd, message.c_str(), message.size(), 0) == -1)
         perror("send");
 }
 
-int Peer::create_connection(contact_info* info) {
-    const char* port = std::to_string(info->port).c_str();
+bool Peer::create_connection(std::string peer_id, contact_info info) {
+    contact_info new_info;
+    new_info.ip = info.ip;
+    new_info.port = info.port;
+
+    const char* port = std::to_string(info.port).c_str();
 
     int sockfd;
     struct addrinfo* server_info;
@@ -62,9 +67,9 @@ int Peer::create_connection(contact_info* info) {
 
     // get information about the server to connect to
     int ret;
-    if ((ret = getaddrinfo(info->ip, port, &hints, &server_info)) != 0) {
+    if ((ret = getaddrinfo(info.ip, port, &hints, &server_info)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
-        return 1;
+        return 0;
     }
     
     // iterate through the linked list of candidate server information structs
@@ -93,15 +98,16 @@ int Peer::create_connection(contact_info* info) {
     // if it gets here, the connection is established
 
     // update the sockfd field
-    info->sockfd = sockfd;
+    new_info.sockfd = sockfd;
     // add the new connection to the connection list
     this->connections_lock.lock();
-    this->connections.push_back(*info);
+    this->connections.insert(std::pair<std::string, contact_info>(peer_id, new_info));
     this->connections_lock.unlock();
 
     // create a listener thread
-    std::thread receive_thread(&Peer::receive_loop, this, sockfd);
+    std::thread receive_thread(&Peer::receive_loop, this, sockfd, peer_id);
     receive_thread.detach();
+
     return 1;
 }
 
@@ -164,6 +170,8 @@ void Peer::run_server() {
         perror("listen");
         exit(1);
     }
+
+    int connect_number = 1;
     
     // infinite accept loop
     while (true) {
@@ -186,36 +194,42 @@ void Peer::run_server() {
 
         contact_info info = {client_ip, client_port, newfd};
 
+        std::string peer_id = std::to_string(connect_number);
+        connect_number++;
+
         // add the new connection to the connection list
         this->connections_lock.lock();
-        this->connections.push_back(info);
+        this->connections.insert(std::pair<std::string, contact_info>(peer_id, info));
         this->connections_lock.unlock();
-
-        std::thread receive_thread(&Peer::receive_loop, this, newfd);
+        std::thread receive_thread(&Peer::receive_loop, this, newfd, peer_id);
         receive_thread.detach();
     }
 }
 
-void Peer::receive_loop(int sockfd) {
-    // temporarily limit message size to 100 bytes
-    char buf[100];
-    int count = 0;
-    while (true) {
-        int numbytes;
-        if ((numbytes = recv(sockfd, buf, 99, 0)) <= 0) {
-            break;
+void Peer::receive_loop(int sockfd, std::string peer_id) {
+    try {
+        // temporarily limit message size to 100 bytes
+        char buf[100];
+        int count = 0;
+        while (true) {
+            int numbytes;
+            if ((numbytes = recv(sockfd, buf, 99, 0)) <= 0) {
+                break;
+            }
+            buf[numbytes] = '\0';
+            std::string s(buf);
+            
+            message m = {peer_id, s};
+
+            this->message_queue_lock.lock();
+            this->message_queue.push_back(m);
+            this->message_queue_lock.unlock();
         }
-        buf[numbytes] = '\0';
-        std::string s(buf);
-        
-        message m = {s};
 
-        this->message_queue_lock.lock();
-        this->message_queue.push_back(m);
-        this->message_queue_lock.unlock();
+        // connection has failed
+        // close the socket and terminate the thread
+        close(sockfd);
+    } catch (...) {
+        std::cout << "HELP" << std::endl;
     }
-
-    // connection has failed
-    // close the socket and terminate the thread
-    close(sockfd);
 }
