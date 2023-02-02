@@ -21,4 +21,9 @@ int main() {
     sleep(1);
     std::cout << "Node 1 num messages: " << p1.get_num_messages() << std::endl;
     std::cout << "\nMessage: " << p1.get_message().body << std::endl;
+
+    p1.broadcast("hey");
+    sleep(1);
+    std::cout << "message: " << p2.get_message().body << std::endl;
+    std::cout << "message: " << p3.get_message().body << std::endl;
 }

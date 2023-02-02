@@ -46,6 +46,16 @@ void Peer::send_message(std::string peer_id, std::string message) {
         perror("send");
 }
 
+void Peer::broadcast(std::string message) {
+    for (std::map<std::string, contact_info>::iterator itr = this->connections.begin();
+            itr != this->connections.end();
+            itr++) 
+    {
+        std::string peer_id = itr->first;
+        this->send_message(peer_id, message);
+    }
+}
+
 bool Peer::create_connection(std::string peer_id, contact_info info) {
     contact_info new_info;
     new_info.ip = info.ip;
