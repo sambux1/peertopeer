@@ -1,5 +1,7 @@
 #include "peer.h"
 
+#include <stdexcept>
+
 Peer::Peer(std::string id, int port) {
     this->id = id;
 
@@ -32,9 +34,12 @@ int Peer::get_num_messages() {
 }
 
 message Peer::get_message() {
+    message m = {"NULL", "NULL"};
     this->message_queue_lock.lock();
-    message m = this->message_queue.front();
-    this->message_queue.pop_front();
+    if (this->message_queue.size() > 0) {
+        m = this->message_queue.front();
+        this->message_queue.pop_front();
+    }
     this->message_queue_lock.unlock();
 
     return m;
